@@ -12,6 +12,7 @@ This repository contains my implementation of the project from the ["Zero To Pro
 ### Current Modifications:
 
 - Using Rust's built-in linking based on `lld` instead of the book's suggested linking configuration, as this is now the standard approach in modern Rust
+- Code coverage testing has been omitted for now, as it requires additional setup that I haven't gotten around to yet.
 
 ### Planned Modifications:
 
@@ -36,3 +37,5 @@ This is a newsletter delivery service built with Rust, following modern web deve
 - Run `cargo watch -x check` to run the tests and linting on every change
 - Keep in mind that this command can be chained with other commands, such as `-x run` to run the program and `-x test` to run the tests. Example: `cargo watch -x check -x test -x run`
 - Run `cargo test` to run the tests once.
+- Run `cargo fmt` to format the code.
+- Run `cargo audit` to check installed crates for vulnerabilities.
