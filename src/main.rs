@@ -6,6 +6,13 @@ struct Greeting {
     name: String,
 }
 
+// TODO: Create a Health Check SAAS for internal usage.
+#[get("/healthz")]
+async fn health_check() -> impl Responder {
+    println!("[INFO] We are sending a health check to client!");
+    HttpResponse::Ok()
+}
+
 #[get("/")]
 async fn hello() -> impl Responder {
     println!("[INFO] Sending hello world to client");
@@ -40,6 +47,7 @@ async fn main() -> std::io::Result<()> {
             .service(hello)
             .service(greet)
             .service(greet_route)
+            .service(health_check)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
