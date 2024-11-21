@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use actix_web::{test, App};
+    use actix_web::{test, App, body, web};
 
     use zero2prod::health_check;
 
@@ -12,6 +12,14 @@ mod tests {
             .to_request();
         let resp = test::call_service(&app, req).await;
 
-        assert!(resp.status().is_success())
+        assert!(resp.status().is_success());
+
+        let body = resp.into_body();
+        let bytes = body::to_bytes(body).await;
+
+        assert_eq!(
+            bytes.unwrap(),
+            web::Bytes::from_static(b"")
+        );
     }
 }
