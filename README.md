@@ -34,8 +34,20 @@ This is a newsletter delivery service built with Rust, following modern web deve
 
 ### Development
 
+You can use either direct cargo commands or the provided Makefile shortcuts for development:
+
+#### Using Make (Recommended)
+- `make dev` - Watch and run check, test, and run on changes
+- `make test` - Run tests once
+- `make check` - Run cargo check
+- `make format` - Format code
+- `make audit` - Check installed crates for vulnerabilities
+- `make install-tools` - Install required development tools
+- Run `make help` to see all available commands
+
+#### Using Cargo Directly
 - Run `cargo watch -x check` to run the tests and linting on every change
 - Keep in mind that this command can be chained with other commands, such as `-x run` to run the program and `-x test` to run the tests. Example: `cargo watch -x check -x test -x run`
-- Run `cargo test` to run the tests once.
-- Run `cargo fmt` to format the code.
-- Run `cargo audit` to check installed crates for vulnerabilities.
+- Run `cargo test` to run the tests once
+- Run `cargo fmt` to format the code
+- Run `cargo audit` to check installed crates for vulnerabilities
