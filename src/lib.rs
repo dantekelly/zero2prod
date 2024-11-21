@@ -6,6 +6,11 @@ struct Greeting {
     name: String,
 }
 
+#[derive(Deserialize)]
+struct FormData {
+    name: String,
+}
+
 // TODO: Create a Health Check SAAS for internal usage.
 #[get("/healthz")]
 pub async fn health_check() -> impl Responder {
@@ -40,6 +45,14 @@ async fn greet_route(path: web::Path<String>) -> impl Responder {
     format!("[DEPRECATED] Hello, {}!", name)
 }
 
+#[post("/subscribe")]
+async fn subscribe(form: web::Form<FormData>) -> HttpResponse {
+    if form.name.is_empty() {
+        return HttpResponse::BadRequest().body("Form name is missing!");
+    }
+    HttpResponse::Ok().body(format!("Welcome {}!", form.name))
+}
+
 pub async fn run() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
@@ -47,6 +60,7 @@ pub async fn run() -> std::io::Result<()> {
             .service(greet)
             .service(greet_route)
             .service(health_check)
+            .service(subscribe)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
