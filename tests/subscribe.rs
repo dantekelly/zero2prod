@@ -1,18 +1,14 @@
 #[cfg(test)]
 mod tests {
-    use actix_web::{test, App};
+    use actix_web::{body, test, App, web};
     use serde::Serialize;
 
     use zero2prod::subscribe;
 
     #[derive(Serialize)]
-    struct CorrectFormData {
+    struct FormData {
         name: String,
-    }
-
-    #[derive(Serialize)]
-    struct BadFormData {
-        nmea: String,
+        email: String
     }
 
     #[actix_web::test]
@@ -20,7 +16,7 @@ mod tests {
         let app = test::init_service(App::new().service(subscribe)).await;
         let req = test::TestRequest::post()
             .uri("/subscribe")
-            .set_form(CorrectFormData {name: "Dante".to_string()})
+            .set_form(FormData {name: "Dante".to_string(), email: "theonetheonly@fakeemail.com".to_string()})
             .to_request();
         let resp = test::call_service(&app, req).await;
 
@@ -28,14 +24,31 @@ mod tests {
     }
 
     #[actix_web::test]
-    async fn subscribe_returns_a_400_when_data_is_missing() {
+    async fn subscribe_returns_a_400_when_data_is_wrong() {
         let app = test::init_service(App::new().service(subscribe)).await;
-        let req = test::TestRequest::post()
-            .uri("/subscribe")
-            .set_form(BadFormData { nmea: "Dante".to_string() })
-            .to_request();
-        let resp = test::call_service(&app, req).await;
+        let test_cases = vec![
+            (FormData { name: "Dante".to_string(), email: "".to_string() }, "Email is missing!"),
+            (FormData { name: "".to_string(), email: "theonetheonly@fakeemail.com".to_string() }, "Name is missing!"),
+            (FormData { name: "".to_string(), email: "".to_string() }, "Missing both name and email!")
+        ];
 
-        assert!(resp.status().is_client_error());
+        for (invalid_form, error_message) in test_cases {
+            let req = test::TestRequest::post()
+                .uri("/subscribe")
+                .set_form(&invalid_form)
+                .to_request();
+            let resp = test::call_service(&app, req).await;
+
+            assert!(resp.status().is_client_error());
+
+            let body = resp.into_body();
+            let bytes = body::to_bytes(body).await;
+
+            assert_eq!(
+                bytes.unwrap(),
+                web::Bytes::from_static(error_message.as_bytes())
+            );
+        }
+
     }
 }
