@@ -9,12 +9,13 @@ This repository contains my implementation of the project from the ["Zero To Pro
 
 ## Key Differences from the Book
 
-### Current Modifications:
+### Current Modifications
 
 - Using Rust's built-in linking based on `lld` instead of the book's suggested linking configuration, as this is now the standard approach in modern Rust
 - Code coverage testing has been omitted for now, as it requires additional setup that I haven't gotten around to yet.
+- The `FormData` is using Actix Web and Serde's Form serialization and deserialization instead of the book's recommendation of 'x-www-form-urlencoded' package which is no longer necessary and gravely out of date.
 
-### Planned Modifications:
+### Planned Modifications
 
 - Will document additional changes here as the project progresses
 - Focus on incorporating the latest security practices
@@ -37,6 +38,7 @@ This is a newsletter delivery service built with Rust, following modern web deve
 You can use either direct cargo commands or the provided Makefile shortcuts for development:
 
 #### Using Make (Recommended)
+
 - `make dev` - Watch and run check, test, and run on changes
 - `make test` - Run tests once
 - `make check` - Run cargo check
@@ -46,6 +48,7 @@ You can use either direct cargo commands or the provided Makefile shortcuts for 
 - Run `make help` to see all available commands
 
 #### Using Cargo Directly
+
 - Run `cargo watch -x check` to run the tests and linting on every change
 - Keep in mind that this command can be chained with other commands, such as `-x run` to run the program and `-x test` to run the tests. Example: `cargo watch -x check -x test -x run`
 - Run `cargo test` to run the tests once
