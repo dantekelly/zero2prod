@@ -4,6 +4,9 @@
 # Default development watch command
 dev: watch-all
 
+init-db:
+	./scripts/init_db.sh
+
 # Run tests once
 test:
 	cargo test

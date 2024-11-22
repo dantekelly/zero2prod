@@ -14,6 +14,7 @@ This repository contains my implementation of the project from the ["Zero To Pro
 - Using Rust's built-in linking based on `lld` instead of the book's suggested linking configuration, as this is now the standard approach in modern Rust
 - Code coverage testing has been omitted for now, as it requires additional setup that I haven't gotten around to yet.
 - The `FormData` is using Actix Web and Serde's Form serialization and deserialization instead of the book's recommendation of 'x-www-form-urlencoded' package which is no longer necessary and gravely out of date.
+- The database image is now using the `rapidfort/postgresql` image, which is a hardened version of the bitnami Postgres image.
 
 ### Planned Modifications
 
@@ -32,6 +33,8 @@ This is a newsletter delivery service built with Rust, following modern web deve
 
 - Rust (latest stable version)
 - Cargo (comes with Rust)
+- Docker (latest version)
+- Sqlx CLI (latest version - cargo install sqlx-cli --no-default-features --features rustls,postgres)
 
 ### Development
 
