@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests {
     use actix_web::{body, test, web, App};
-
     use zero2prod::routes::healthz;
 
     #[actix_web::test]

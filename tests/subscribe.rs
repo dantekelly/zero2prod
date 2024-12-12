@@ -2,7 +2,8 @@
 mod tests {
     use actix_web::{body, test, web, App};
     use serde::Serialize;
-
+    use sqlx::{Connection, PgConnection};
+    use zero2prod::configuration::get_configuration;
     use zero2prod::routes::subscribe;
 
     #[derive(Serialize)]
@@ -14,6 +15,14 @@ mod tests {
     #[actix_web::test]
     async fn subscribe_returns_a_200_for_valid_form_data() {
         let app = test::init_service(App::new().service(subscribe)).await;
+        let configuration = get_configuration().expect("Failed to read configuration.");
+        let configuration_string = configuration.database.connection_string();
+
+        let _connection = PgConnection::connect(&configuration_string)
+            .await
+            .expect("Failed to connect to Postgres.");
+
+        // Request
         let req = test::TestRequest::post()
             .uri("/subscribe")
             .set_form(FormData {
@@ -21,8 +30,9 @@ mod tests {
                 email: "theonetheonly@fakeemail.com".to_string(),
             })
             .to_request();
-        let resp = test::call_service(&app, req).await;
 
+        // Response
+        let resp = test::call_service(&app, req).await;
         assert!(resp.status().is_success());
     }
 
