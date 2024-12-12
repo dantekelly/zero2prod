@@ -1,14 +1,14 @@
 #[cfg(test)]
 mod tests {
-    use actix_web::{body, test, App, web};
+    use actix_web::{body, test, web, App};
     use serde::Serialize;
 
-    use zero2prod::subscribe;
+    use zero2prod::routes::subscribe;
 
     #[derive(Serialize)]
     struct FormData {
         name: String,
-        email: String
+        email: String,
     }
 
     #[actix_web::test]
@@ -16,7 +16,10 @@ mod tests {
         let app = test::init_service(App::new().service(subscribe)).await;
         let req = test::TestRequest::post()
             .uri("/subscribe")
-            .set_form(FormData {name: "Dante".to_string(), email: "theonetheonly@fakeemail.com".to_string()})
+            .set_form(FormData {
+                name: "Dante".to_string(),
+                email: "theonetheonly@fakeemail.com".to_string(),
+            })
             .to_request();
         let resp = test::call_service(&app, req).await;
 
@@ -27,9 +30,27 @@ mod tests {
     async fn subscribe_returns_a_400_when_data_is_wrong() {
         let app = test::init_service(App::new().service(subscribe)).await;
         let test_cases = vec![
-            (FormData { name: "Dante".to_string(), email: "".to_string() }, "Email is missing!"),
-            (FormData { name: "".to_string(), email: "theonetheonly@fakeemail.com".to_string() }, "Name is missing!"),
-            (FormData { name: "".to_string(), email: "".to_string() }, "Missing both name and email!")
+            (
+                FormData {
+                    name: "Dante".to_string(),
+                    email: "".to_string(),
+                },
+                "Email is missing!",
+            ),
+            (
+                FormData {
+                    name: "".to_string(),
+                    email: "theonetheonly@fakeemail.com".to_string(),
+                },
+                "Name is missing!",
+            ),
+            (
+                FormData {
+                    name: "".to_string(),
+                    email: "".to_string(),
+                },
+                "Missing both name and email!",
+            ),
         ];
 
         for (invalid_form, error_message) in test_cases {
@@ -49,6 +70,5 @@ mod tests {
                 web::Bytes::from_static(error_message.as_bytes())
             );
         }
-
     }
 }

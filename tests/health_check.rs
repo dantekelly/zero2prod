@@ -1,15 +1,13 @@
 #[cfg(test)]
 mod tests {
-    use actix_web::{test, App, body, web};
+    use actix_web::{body, test, web, App};
 
-    use zero2prod::health_check;
+    use zero2prod::routes::healthz;
 
     #[actix_web::test]
     async fn health_check_succeeds() {
-        let app = test::init_service(App::new().service(health_check)).await;
-        let req = test::TestRequest::get()
-            .uri("/healthz")
-            .to_request();
+        let app = test::init_service(App::new().service(healthz)).await;
+        let req = test::TestRequest::get().uri("/healthz").to_request();
         let resp = test::call_service(&app, req).await;
 
         assert!(resp.status().is_success());
@@ -17,9 +15,6 @@ mod tests {
         let body = resp.into_body();
         let bytes = body::to_bytes(body).await;
 
-        assert_eq!(
-            bytes.unwrap(),
-            web::Bytes::from_static(b"")
-        );
+        assert_eq!(bytes.unwrap(), web::Bytes::from_static(b""));
     }
 }
