@@ -60,9 +60,23 @@ done
 # Create the application user
 # TODO: Add a check to see if the user already exists, and if so, skip creating it.
 CREATE_QUERY="CREATE USER ${APP_USER} WITH PASSWORD '${APP_USER_PWD}';"
-docker exec -it "${CONTAINER_NAME}" psql -U "${SUPERUSER}" -c "${CREATE_QUERY}"
+docker exec "${CONTAINER_NAME}" psql -U "${SUPERUSER}" -c "${CREATE_QUERY}"
 
 # Grant create db privileges to the app user
 # TODO: Add a check to see if the user already has the privileges, and if so, skip granting them.
 GRANT_QUERY="ALTER USER ${APP_USER} CREATEDB;"
-docker exec -it "${CONTAINER_NAME}" psql -U "${SUPERUSER}" -c "${GRANT_QUERY}"
+docker exec "${CONTAINER_NAME}" psql -U "${SUPERUSER}" -c "${GRANT_QUERY}"
+
+# Grant permissions on the public schema to the app user
+SCHEMA_QUERY="GRANT ALL ON SCHEMA public TO ${APP_USER};"
+docker exec "${CONTAINER_NAME}" psql -U "${SUPERUSER}" -d "${APP_DB_NAME}" -c "${SCHEMA_QUERY}"
+
+# Wait for the last operations to complete
+sleep 1
+
+# Create Database
+DATABASE_URL=postgres://${APP_USER}:${APP_USER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME}
+export DATABASE_URL
+sqlx database create
+sqlx migrate run
+>&2 echo "Postgres has been migrated, ready to go!"
