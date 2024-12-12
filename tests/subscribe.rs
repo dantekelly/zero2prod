@@ -2,7 +2,7 @@
 mod tests {
     use actix_web::{body, test, web, App};
     use serde::Serialize;
-    use sqlx::{Connection, PgConnection};
+    use sqlx::PgPool;
     use zero2prod::configuration::get_configuration;
     use zero2prod::routes::subscribe;
 
@@ -14,13 +14,17 @@ mod tests {
 
     #[actix_web::test]
     async fn subscribe_returns_a_200_for_valid_form_data() {
-        let app = test::init_service(App::new().service(subscribe)).await;
         let configuration = get_configuration().expect("Failed to read configuration.");
-        let configuration_string = configuration.database.connection_string();
-
-        let _connection = PgConnection::connect(&configuration_string)
+        let connection_pool = PgPool::connect(&configuration.database.connection_string())
             .await
             .expect("Failed to connect to Postgres.");
+        let pool = web::Data::new(connection_pool);
+        let app = test::init_service(App::new().app_data(pool.clone()).service(subscribe)).await;
+
+        sqlx::query!("TRUNCATE TABLE subscriptions")
+            .execute(pool.get_ref())
+            .await
+            .expect("Failed to clean database");
 
         // Request
         let req = test::TestRequest::post()
@@ -34,11 +38,24 @@ mod tests {
         // Response
         let resp = test::call_service(&app, req).await;
         assert!(resp.status().is_success());
+
+        let saved = sqlx::query!("SELECT email, name FROM subscriptions",)
+            .fetch_one(pool.get_ref())
+            .await
+            .expect("Failed to fetch saved subscription.");
+
+        assert_eq!(saved.name, "Dante");
+        assert_eq!(saved.email, "theonetheonly@fakeemail.com");
     }
 
     #[actix_web::test]
     async fn subscribe_returns_a_400_when_data_is_wrong() {
-        let app = test::init_service(App::new().service(subscribe)).await;
+        let configuration = get_configuration().expect("Failed to read configuration.");
+        let connection_pool = PgPool::connect(&configuration.database.connection_string())
+            .await
+            .expect("Failed to connect to Postgres.");
+        let pool = web::Data::new(connection_pool);
+        let app = test::init_service(App::new().app_data(pool.clone()).service(subscribe)).await;
         let test_cases = vec![
             (
                 FormData {
@@ -70,6 +87,7 @@ mod tests {
                 .to_request();
             let resp = test::call_service(&app, req).await;
 
+            dbg!(&resp.status());
             assert!(resp.status().is_client_error());
 
             let body = resp.into_body();
