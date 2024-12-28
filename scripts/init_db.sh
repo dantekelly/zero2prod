@@ -17,9 +17,9 @@ APP_USER="${APP_USER:=app}"
 APP_USER_PWD="${APP_USER_PWD:=secret}"
 APP_DB_NAME="${APP_DB_NAME:=newsletter}"
 
-
 # Launch postgres using Docker
-CONTAINER="rapidfort/postgresql"
+# CONTAINER="rapidfort/postgresql"
+CONTAINER="postgres"
 CONTAINER_NAME="postgres"
 
 # Check if the container exists and its status
@@ -32,6 +32,15 @@ if docker ps -a -f name="${CONTAINER_NAME}" --format '{{.ID}}' | grep -q .; then
         docker start "${CONTAINER_NAME}"
     fi
 else
+    # Create a temporary directory for initialization scripts
+    INIT_DIR=$(mktemp -d)
+    cp scripts/init.sql "${INIT_DIR}/"
+
+    # Replace variables in the init.sql file
+    sed -i "s/\${APP_USER}/${APP_USER}/g" "${INIT_DIR}/init.sql"
+    sed -i "s/\${APP_USER_PWD}/${APP_USER_PWD}/g" "${INIT_DIR}/init.sql"
+    sed -i "s/\${APP_DB_NAME}/${APP_DB_NAME}/g" "${INIT_DIR}/init.sql"
+
     docker run \
         --env POSTGRES_USER=${SUPERUSER} \
         --env POSTGRES_PASSWORD=${SUPERUSER_PWD} \
@@ -42,11 +51,15 @@ else
         --health-timeout=5s \
         --health-retries=5 \
         --publish "${DB_PORT}":5432 \
+        --volume "${INIT_DIR}/init.sql":/docker-entrypoint-initdb.d/init.sql \
         --detach \
         ${CONTAINER}
+
+    # Clean up the temporary directory
+    rm -rf "${INIT_DIR}"
 fi
 
-# Wait for Postgres to be ready to accept connections
+# Wait for Postgres to be ready
 until [ \
     "$(docker inspect -f "{{.State.Health.Status}}" ${CONTAINER_NAME})" == \
     "healthy" \
@@ -57,26 +70,7 @@ done
 
 >&2 echo "Postgres is up and running on port ${DB_PORT}!"
 
-# Create the application user
-# TODO: Add a check to see if the user already exists, and if so, skip creating it.
-CREATE_QUERY="CREATE USER ${APP_USER} WITH PASSWORD '${APP_USER_PWD}';"
-docker exec "${CONTAINER_NAME}" psql -U "${SUPERUSER}" -c "${CREATE_QUERY}"
-
-# Grant create db privileges to the app user
-# TODO: Add a check to see if the user already has the privileges, and if so, skip granting them.
-GRANT_QUERY="ALTER USER ${APP_USER} CREATEDB;"
-docker exec "${CONTAINER_NAME}" psql -U "${SUPERUSER}" -c "${GRANT_QUERY}"
-
-# Grant permissions on the public schema to the app user
-SCHEMA_QUERY="GRANT ALL ON SCHEMA public TO ${APP_USER};"
-docker exec "${CONTAINER_NAME}" psql -U "${SUPERUSER}" -d "${APP_DB_NAME}" -c "${SCHEMA_QUERY}"
-
-# Wait for the last operations to complete
 sleep 1
 
-# Create Database
-DATABASE_URL=postgres://${APP_USER}:${APP_USER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME}
-export DATABASE_URL
-sqlx database create
 sqlx migrate run
 >&2 echo "Postgres has been migrated, ready to go!"
