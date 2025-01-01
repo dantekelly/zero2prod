@@ -18,6 +18,7 @@ APP_USER_PWD="${APP_USER_PWD:=secret}"
 APP_DB_NAME="${APP_DB_NAME:=newsletter}"
 
 # Launch postgres using Docker
+# TODO: Add this back in once we have TLS enabled
 # CONTAINER="rapidfort/postgresql"
 CONTAINER="postgres"
 CONTAINER_NAME="postgres"
