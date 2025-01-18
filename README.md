@@ -40,15 +40,17 @@ This is a newsletter delivery service built with Rust, following modern web deve
 
 You can use either direct cargo commands or the provided Makefile shortcuts for development:
 
-#### Using Make (Recommended)
+#### Using Just (Recommended)
 
-- `make dev` - Watch and run check, test, and run on changes
-- `make test` - Run tests once
-- `make check` - Run cargo check
-- `make format` - Format code
-- `make audit` - Check installed crates for vulnerabilities
-- `make install-tools` - Install required development tools
-- Run `make help` to see all available commands
+Install Just via the official instructions on the [Just Repository](https://github.com/casey/just?tab=readme-ov-file#installation).
+
+- `just dev` - Watch and run check, test, and run on changes
+- `just test` - Run tests once
+- `just check` - Run cargo check
+- `just format` - Format code
+- `just audit` - Check installed crates for vulnerabilities
+- `just install-tools` - Install required development tools
+- Run `just help` to see all available commands
 
 #### Using Cargo Directly
 
